@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>太阳系高精度三维模拟器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <style>
+    /* 布局样式：左侧为three.js画布，右侧为控制与信息面板 */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      color: #eee;
+    }
+
+    #app {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: row;
+    }
+
+    #render-container {
+      flex: 1 1 auto;
+      position: relative;
+      background: radial-gradient(circle at 20% 20%, #222 0, #000 60%);
+    }
+
+    #ui-panel {
+      width: 340px;
+      max-width: 40%;
+      background: rgba(8, 8, 12, 0.96);
+      border-left: 1px solid #222;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #ui-panel-header {
+      padding: 8px 10px 8px 14px;
+      border-bottom: 1px solid #222;
+      background: linear-gradient(90deg, #111 0, #181820 60%, #111 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    #ui-panel-title {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+    }
+
+    #ui-panel-header small {
+      display: block;
+      margin-top: 4px;
+      color: #999;
+      font-size: 11px;
+    }
+
+    #toggle-panel {
+      flex-shrink: 0;
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+
+    #controls {
+      padding: 10px 14px;
+      border-bottom: 1px solid #222;
+      font-size: 12px;
+    }
+
+    .control-group {
+      margin-bottom: 10px;
+    }
+
+    .control-group label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .control-row span {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    button {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #202030;
+      color: #eee;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    button:hover {
+      background: #34344a;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button[aria-pressed="true"] {
+      background: #3f5bd8;
+      border-color: #6f8dff;
+    }
+
+    #info-panel {
+      flex: 1 1 auto;
+      padding: 10px 14px;
+      overflow: auto;
+      font-size: 12px;
+    }
+
+    #body-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    #body-type {
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    #body-details table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    #body-details th,
+    #body-details td {
+      text-align: left;
+      padding: 2px 0;
+    }
+
+    #body-details th {
+      color: #999;
+      font-weight: 500;
+      width: 48%;
+    }
+
+    #body-details tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    #docs {
+      margin-top: 12px;
+      border-top: 1px solid #222;
+      padding-top: 8px;
+    }
+
+    #docs summary {
+      cursor: pointer;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    #docs p {
+      margin: 3px 0;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    #perf-indicator {
+      position: absolute;
+      left: 8px;
+      bottom: 6px;
+      padding: 2px 6px;
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 3px;
+      color: #ccc;
+      pointer-events: none;
+    }
+
+    #loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 20% 20%, #222 0, #000 60%);
+      color: #aaa;
+      font-size: 13px;
+      z-index: 10;
+    }
+
+    #loading-overlay.hidden {
+      display: none;
+    }
+
+    #panel-toggle-overlay {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 5;
+      font-size: 11px;
+      padding: 4px 8px;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      #app {
+        flex-direction: column;
+      }
+
+      #ui-panel {
+        width: 100%;
+        max-width: 100%;
+        height: 38%;
+      }
+
+      #render-container {
+        height: 62%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="render-container">
+      <div id="loading-overlay">正在加载太阳系纹理与轨道数据...</div>
+      <div id="perf-indicator">fps: -- / 目标 60</div>
+      <button id="panel-toggle-overlay" type="button">展开面板</button>
+    </div>
+    <aside id="ui-panel" aria-label="太阳系控制与信息面板">
+      <header id="ui-panel-header">
+        <div>
+          <h1 id="ui-panel-title">太阳系高精度模拟器</h1>
+          <small>数据基于 NASA 行星轨道要素，单位经过可视化缩放</small>
+        </div>
+        <button id="toggle-panel" type="button">收起面板</button>
+      </header>
+      <section id="controls">
+        <div class="control-group">
+          <label for="time-scale">
+            时间流速
+            <span id="time-scale-label">x 1.0</span>
+          </label>
+          <input id="time-scale" type="range" min="-3" max="6" step="0.1" value="0" />
+          <div class="control-row">
+            <span>减速 / 倒放</span>
+            <span>加速</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <label>轨道显示</label>
+            <button id="toggle-orbits" aria-pressed="true">显示轨道</button>
+          </div>
+          <div class="control-row">
+            <label>轨道缩放（视觉）</label>
+            <input id="orbit-scale" type="range" min="0.2" max="3" step="0.1" value="1" />
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <label>自动跟踪</label>
+            <select id="follow-target">
+              <option value="">关闭自动跟踪</option>
+              <option value="sun">太阳</option>
+              <option value="mercury">水星</option>
+              <option value="venus">金星</option>
+              <option value="earth">地球</option>
+              <option value="moon">月球</option>
+              <option value="mars">火星</option>
+              <option value="jupiter">木星</option>
+              <option value="saturn">土星</option>
+              <option value="uranus">天王星</option>
+              <option value="neptune">海王星</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <label>地球视图</label>
+            <button id="earth-view-toggle" aria-pressed="false">
+              地球 · 昼
+            </button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <label>尺寸映射</label>
+            <select id="size-mode">
+              <option value="log">对数（推荐）</option>
+              <option value="real">真实比例</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <label>光照模式</label>
+            <select id="lighting-mode">
+              <option value="teaching">教学光照</option>
+              <option value="real">真实光照</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      <section id="info-panel">
+        <div id="body-name">太阳</div>
+        <div id="body-type">恒星 · 中心光源</div>
+        <div id="body-details"></div>
+        <details id="docs" open>
+          <summary>使用说明与测试指引</summary>
+          <p>基础操作：鼠标左键拖拽旋转视角，滚轮缩放，右键拖拽平移。</p>
+          <p>天体信息：点击任一行星或卫星，可在右侧查看其轨道与物理参数。</p>
+          <p>时间控制：下方滑块控制模拟时间流速，可减速、暂停、加速或反向播放。</p>
+          <p>轨道显示：点击“显示轨道”按钮可切换轨道可见性，“轨道缩放”仅影响视觉比例。</p>
+          <p>自动跟踪：在“自动跟踪”下拉框中选择目标，视角将缓慢跟随该天体运动。</p>
+          <p>
+            轨道参数测试：可在控制台调用
+            <code>SolarSystemTest.runAll()</code>
+            校验轨道周期与半长轴误差是否在阈值内。
+          </p>
+          <p>
+            交互测试：依次验证旋转、缩放、平移、点击高亮与信息更新、时间流速变化、轨道开关与缩放、自动跟踪切换均正常工作且无报错。
+          </p>
+          <p>
+            跨浏览器测试：在 Chrome、Edge、Firefox、Safari 中打开本页面，确认三维场景能正常加载，帧率指示接近 60fps，控制台无报错。
+          </p>
+        </details>
+      </section>
+    </aside>
+  </div>
+
+  <!-- 通过 import map 映射 three.js 及其扩展模块 -->
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/examples/jsm/controls/OrbitControls.js": "/node_modules/three/examples/jsm/controls/OrbitControls.js"
+        }
+      }
+    </script>
+  <!-- 使用 ES Modules 方式引入应用脚本（通过查询参数规避旧缓存） -->
+  <script type="module" src="./app.js?v=2"></script>
+</body>
+
+</html>

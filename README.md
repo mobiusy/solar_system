@@ -80,11 +80,9 @@
 ### 4.1 克隆仓库
 
 ```bash
-git clone <your-repo-url> solar_system
+git clone git@github.com:mobiusy/solar_system.git
 cd solar_system
 ```
-
-> 请将 `<your-repo-url>` 替换为实际仓库地址。
 
 ### 4.2 启动本地 HTTP 服务器
 

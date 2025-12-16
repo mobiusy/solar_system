@@ -80,11 +80,9 @@ The repository already contains a complete `textures/` directory. In most cases,
 ### 4.1 Clone the Repository
 
 ```bash
-git clone <your-repo-url> solar_system
+git clone git@github.com:mobiusy/solar_system.git
 cd solar_system
 ```
-
-> Replace `<your-repo-url>` with the actual repository address.
 
 ### 4.2 Start the Local HTTP Server
 

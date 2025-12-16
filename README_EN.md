@@ -32,10 +32,12 @@ The UI language in `index.html` is currently **Chinese (Simplified)**, but the c
 
 ### 2.1 Frontend
 
-- **Core library**: [`three`](https://threejs.org/) `^0.161.0` (see `package.json:12-14`)
+- **Core library**: [`three`](https://threejs.org/) `0.161.0`, loaded via CDN as ES modules (`index.html:363-373`)
 - **Rendering**: `THREE.WebGLRenderer`, `THREE.Scene`, `THREE.PerspectiveCamera`, `THREE.Points`, etc. (`app.js:1-150`)
 - **Camera interaction**: `OrbitControls` from `three/examples/jsm/controls/OrbitControls.js` (`app.js:2`)
 - **Data layer**: Static orbital and physical parameters in `ORBIT_DATA` and scaling constants in `VISUAL_SCALE` (`orbit-data.js:1-147`)
+
+The frontend no longer depends on a local `node_modules` directory, and you do not need `npm install` to obtain `three`; all three.js modules are served directly from the CDN.
 
 ### 2.2 Helper Scripts
 
@@ -45,7 +47,6 @@ The UI language in `index.html` is currently **Chinese (Simplified)**, but the c
 ### 2.3 Runtime Environment
 
 - Modern desktop browser with WebGL support (Chrome, Edge, Firefox, or equivalent)
-- Node.js (optional, for installing `three` via `npm` if needed)
 - Python 3.x (for helper scripts)
 
 ---
@@ -63,12 +64,12 @@ The UI language in `index.html` is currently **Chinese (Simplified)**, but the c
 
 ### 3.2 Project Dependencies
 
-- **JavaScript dependencies** (from `package.json:1-15`):
-  - `three@^0.161.0`
+- **Frontend dependencies**:
+  - three.js loaded from a CDN, currently version `0.161.0` (`index.html:363-373`)
 - **Python standard library only**:
   - `http.server`, `socketserver`, `mimetypes` (`serve.py:1-12`)
 
-> The project does **not** currently define automated tests in `npm scripts` (`package.json:5-7`).
+This project no longer contains a `package.json` file or any `npm` scripts. There are no automated test commands; for basic verification you can open the app in a browser and optionally run `SolarSystemTest.runAll()` from the console (`app.js:911-1004`).
 
 ---
 
@@ -85,17 +86,7 @@ cd solar_system
 
 > Replace `<your-repo-url>` with the actual repository address.
 
-### 4.2 Install JavaScript Dependencies (Optional)
-
-If you want to manage the `three` dependency via `npm`, run:
-
-```bash
-npm install
-```
-
-This installs the dependencies defined in `package.json`, primarily `three`.
-
-### 4.3 Start the Local HTTP Server
+### 4.2 Start the Local HTTP Server
 
 To ensure correct MIME types for `.js` and `.mjs` files, use the bundled Python server:
 
@@ -201,7 +192,7 @@ Example workflow:
 
 ## 7. License
 
-This project is currently licensed under the **ISC License** as declared in `package.json` (`package.json:10`).
+This project’s source code is licensed under the **ISC License**.
 
 In summary, the ISC License:
 

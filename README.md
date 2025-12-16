@@ -32,10 +32,12 @@
 
 ### 2.1 前端
 
-- **核心库**：[`three`](https://threejs.org/) `^0.161.0`（见 `package.json:12-14`）
+- **核心库**：[`three`](https://threejs.org/) `0.161.0`，通过 CDN 以 ES Modules 形式加载（`index.html:363-373`）
 - **渲染相关**：`THREE.WebGLRenderer`、`THREE.Scene`、`THREE.PerspectiveCamera`、`THREE.Points` 等（`app.js:1-150`）
 - **相机交互**：`OrbitControls`，来自 `three/examples/jsm/controls/OrbitControls.js`（`app.js:2`）
 - **数据层**：静态轨道与物理参数定义在 `ORBIT_DATA` 中，可视化缩放常量定义在 `VISUAL_SCALE` 中（`orbit-data.js:1-147`）
+
+前端代码不再依赖本地 `node_modules` 目录，也不再需要通过 `npm` 安装 `three`，所有 three.js 相关模块均由 CDN 提供。
 
 ### 2.2 辅助脚本
 
@@ -45,7 +47,6 @@
 ### 2.3 运行环境
 
 - 支持 WebGL 的现代桌面浏览器（Chrome / Edge / Firefox 等）
-- Node.js（可选，用于通过 `npm` 安装 `three` 依赖）
 - Python 3.x（用于辅助脚本）
 
 ---
@@ -63,12 +64,12 @@
 
 ### 3.2 项目依赖
 
-- **JavaScript 依赖**（来自 `package.json:1-15`）：
-  - `three@^0.161.0`
+- **前端依赖**：
+  - three.js 通过 CDN 加载，当前使用版本 `0.161.0`（`index.html:363-373`）
 - **Python 仅使用标准库**：
   - `http.server`、`socketserver`、`mimetypes`（`serve.py:1-12`）
-
-> 当前在 `npm scripts` 中尚未定义自动化测试命令（`package.json:5-7`）。
+  
+当前项目不再包含 `package.json`，也未定义任何 `npm` 脚本或自动化测试命令，如需测试可通过浏览器控制台调用 `SolarSystemTest.runAll()`（`app.js:911-1004`）。
 
 ---
 
@@ -85,18 +86,7 @@ cd solar_system
 
 > 请将 `<your-repo-url>` 替换为实际仓库地址。
 
-### 4.2 安装 JavaScript 依赖（可选）
-
-如需通过 `npm` 管理 `three` 依赖，可执行：
-
-```bash
-npm install
-```
-
-该命令会安装 `package.json` 中定义的依赖（目前主要为 `three`）。
-
-### 4.3 下载纹理资源（推荐）
-### 4.3 启动本地 HTTP 服务器
+### 4.2 启动本地 HTTP 服务器
 
 为确保 `.js` 与 `.mjs` 文件的 MIME 类型正确，建议使用仓库内的 Python 服务器：
 
@@ -202,7 +192,7 @@ Serving HTTP on 0.0.0.0 port 4175 (http://localhost:4175/) ...
 
 ## 7. 许可证信息
 
-本项目当前采用 **ISC License**（在 `package.json` 中声明，见 `package.json:10`）。
+本项目代码采用 **ISC License** 授权。
 
 简要说明如下：
 
